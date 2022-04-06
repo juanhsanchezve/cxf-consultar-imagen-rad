@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring       https://camel.apache.org/schema/spring/camel-spring.xsd">
+    <camelContext id="camelContext-consultarImagenRadService"
+        xmlns="http://camel.apache.org/schema/spring"
+        xmlns:s="http://servicios.mercurio.servisoft.com.co/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled>
+                <simple>true</simple>
+            </handled>
+            <setHeader headerName="codeError">
+                <constant>500</constant>
+            </setHeader>
+            <setHeader headerName="messageError">
+                <simple>Internal Error - ${exception.message}</simple>
+            </setHeader>
+            <to uri="velocity:velocity/buscarRutasfaultwsdl.vm"/>
+        </onException>
+        <interceptSendToEndpoint uri="cxf:*">
+            <log message="Sending to ${headers.CamelInterceptedEndpoint}"/>
+        </interceptSendToEndpoint>
+        <route id="buscarRutas-route" rest="false" streamCache="true">
+            <from id="_from-cxf-soap-inicial" uri="cxf:/ConsultarImagenRadService?wsdlURL=classpath:wsdl/ConsultarImagenRadService.wsdl&amp;serviceName={http://www.servisoft.com.co/Mercurio/Servicios/Contract/ConsultarImagenRadicado}ConsultarImagenRadService&amp;                          portName={http://www.servisoft.com.co/Mercurio/Servicios/Contract/ConsultarImagenRadicado}ConsultarImagenRadicadoSOAP&amp;                          dataFormat=MESSAGE"/>
+            <log id="_log-inicial" loggingLevel="INFO" message="Ejecuntado llamado"/>
+            <log id="_log-cuerpo" loggingLevel="INFO" message="Cuerpo Entrada: ${body}"/>
+            <to id="_to-buscarRutas-conti" uri="cxf:https://{{url.consultar.imagen.rad}}?dataFormat=MESSAGE"/>
+            <log id="_log-salida" loggingLevel="INFO" message="Cuerpo salida: ${body}"/>
+        </route>
+    </camelContext>
+</beans>
